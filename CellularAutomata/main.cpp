@@ -25,7 +25,6 @@ std::array<int, 2> cursorPosition = {(int)(WIDTH / 2), 1};
 
 void printBoard() {
 	buffer = "";
-	buffer.reserve(WIDTH * 2 + HEIGHT);
 
 	for (int y = 1; y <= HEIGHT; y++) {
 		for (int x = 1; x <= WIDTH; x++) {
@@ -47,7 +46,23 @@ void printBoard() {
 void updateBoard() {
 	for (int y = HEIGHT - 2; y > -1; y--) {
 		for (int x = 0; x < WIDTH; x++) {
-			if (board[y][x] != 1 || board[y + 1][x] == 1) continue;
+			if (board[y][x] != 1) continue;
+			if (board[y + 1][x] == 1) {
+				
+				
+				if (x != WIDTH - 1 && board[y + 1][x + 1] == 0) {
+					// Move to the right.
+					board[y][x] = 0;
+					board[y + 1][x + 1] = 1;
+				}
+				else if (x != 0 && board[y + 1][x - 1] == 0) {
+					// Move to the left.
+					board[y][x] = 0;
+					board[y + 1][x - 1] = 1;
+				}
+				
+				continue;
+			}
 
 			board[y][x] = 0;
 			board[y + 1][x] = 1;
@@ -80,13 +95,6 @@ void getInput() {
 int main() {
 	
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-
-	// Debug
-	board[0][0] = 1;
-	board[1][12] = 1;
-	board[0][17] = 1;
-	board[3][15] = 1;
-	board[7][15] = 1;
 
 	// Initial board print.
 	printBoard();
