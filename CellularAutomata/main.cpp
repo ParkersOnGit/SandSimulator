@@ -2,6 +2,7 @@
 #include <array>
 #include <thread>
 #include <chrono>
+#include <conio.h> // Windows specific.
 
 const int WIDTH = 25, HEIGHT = 25;
 
@@ -18,17 +19,29 @@ namespace Color {
 	static const std::string GRAY = "\033[100m";
 };
 
+std::string buffer;
 std::array<std::array<int, WIDTH>, HEIGHT> board;
+std::array<int, 2> cursorPosition = {(int)(WIDTH / 2), 1};
 
 void printBoard() {
-	std::cout << "\033[H";
+	buffer = "";
+	buffer.reserve(WIDTH * 2 + HEIGHT);
+
 	for (int y = 1; y <= HEIGHT; y++) {
 		for (int x = 1; x <= WIDTH; x++) {
-			std::cout << "\033[" << y << ";" << x * 2 - 1 << "H";
-			std::cout << (board[y - 1][x - 1] == 0 ? Color::GRAY : Color::YELLOW);
-			std::cout << "  ";
+			if (x == cursorPosition[0] && y == cursorPosition[1]) {
+				buffer += Color::RED;
+				buffer += "  ";
+				continue;
+			}
+			buffer += (board[y - 1][x - 1] == 0 ? Color::GRAY : Color::YELLOW);
+			buffer += "  ";
 		}
+		buffer += "\n";
 	}
+
+	std::cout << "\033[H";
+	std::cout << buffer << std::flush;
 }
 
 void updateBoard() {
@@ -38,6 +51,28 @@ void updateBoard() {
 
 			board[y][x] = 0;
 			board[y + 1][x] = 1;
+		}
+	}
+}
+
+void getInput() {
+	if (_kbhit()) {
+		switch (_getch()) {
+		case 'w':
+			if (cursorPosition[1] > 1) cursorPosition[1]--;
+			break;
+		case 'a':
+			if (cursorPosition[0] > 1) cursorPosition[0]--;
+			break;
+		case 's':
+			if (cursorPosition[1] < HEIGHT) cursorPosition[1]++;
+			break;
+		case 'd':
+			if (cursorPosition[0] < WIDTH) cursorPosition[0]++;
+			break;
+		case ' ':
+			board[cursorPosition[1] - 1][cursorPosition[0] - 1] = 1;
+			break;
 		}
 	}
 }
@@ -58,9 +93,10 @@ int main() {
 	std::this_thread::sleep_for(std::chrono::milliseconds(250));
 
 	while (true) {
+		getInput();
 		updateBoard();
 		printBoard();
-		std::this_thread::sleep_for(std::chrono::milliseconds(250));
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
 	}
 
 	std::cout << Color::RESET;
